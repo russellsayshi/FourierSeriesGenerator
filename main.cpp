@@ -5,7 +5,7 @@
 #include <iomanip>
 #include <limits>
 
-/* Make sure to compile me with the MathParseC- repo given here: https://github.com/russellsayshi/MathParseC- */
+/* Make sure to compile me with the MathParseC- libary given here: https://github.com/russellsayshi/MathParseC- */
 
 double numeric_integral(interpreter& inter, std::unordered_map<std::string, double>& map, std::string variable, int num_sums, double left_bound, double right_bound) {
 	double bound_difference = right_bound - left_bound;
