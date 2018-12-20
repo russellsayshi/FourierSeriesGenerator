@@ -18,4 +18,4 @@ And here is the lovely graph of that series:
 Here is the same graph, expanded to 150 terms:
 ![100 term fourier series of x^2](https://i.imgur.com/yYf5QN3.png)
 
-Almost indistinguishable from the real thing, isn't it!
+Almost indistinguishable from the real thing, isn't it! Ignore the little dips on the edges of the photo, those should be there. I just snipped the picture a little past -5 and 5, which were my bounds, and the series won't converge to the function outside of the bounds given.
