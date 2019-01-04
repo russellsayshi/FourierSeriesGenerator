@@ -5,28 +5,7 @@
 #include <iomanip>
 #include <limits>
 
-/* Make sure to compile me with the MathParseC- libary given here: https://github.com/russellsayshi/MathParseC- */
-
-double numeric_integral(interpreter& inter, std::unordered_map<std::string, double>& map, std::string variable, int num_sums, double left_bound, double right_bound) {
-	double bound_difference = right_bound - left_bound;
-	double delta = bound_difference / num_sums;
-	double position = left_bound;
-	double running_left_sum = 0;
-	double running_right_sum = 0;
-	map[variable] = position;
-	running_left_sum += inter.interpret(map) * delta;
-	position += delta;
-	for(int i = 1; i < num_sums - 1; i++) {
-		map[variable] = position;
-		double rectArea = inter.interpret(map) * delta;
-		running_left_sum += rectArea;
-		running_right_sum += rectArea;
-		position += delta;
-	}
-	map[variable] = position;
-	running_right_sum += inter.interpret(map) * delta;
-	return (running_left_sum + running_right_sum)/2;
-}
+/* Make sure to compile me with the MathParseC- repo given here: https://github.com/russellsayshi/MathParseC- */
 
 void numeric_integral(double* riemann_values, double* sin_values, double* cos_values, double* sin_out, double* cos_out, long num_riemann_terms, long n) {
 	double sin_sum = 0;
