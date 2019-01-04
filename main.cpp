@@ -4,10 +4,11 @@
 #include <unordered_map>
 #include <iomanip>
 #include <limits>
+#include <thread>
 
 /* Make sure to compile me with the MathParseC- repo given here: https://github.com/russellsayshi/MathParseC- */
 
-void numeric_integral(double* riemann_values, double* sin_values, double* cos_values, double* sin_out, double* cos_out, long num_riemann_terms, long n) {
+void numeric_integral(const double* const riemann_values, const double* const sin_values, const double* const cos_values, double* const sin_out, double* const cos_out, const long num_riemann_terms, const long n) {
 	double sin_sum = 0;
 	double cos_sum = 0;
 
@@ -40,6 +41,12 @@ void numeric_integral(double* riemann_values, double* sin_values, double* cos_va
 	}
 	*sin_out = sin_sum;
 	*cos_out = cos_sum;
+}
+
+void integrate_multithreaded(const double* const riemann_values, const double* const sin_values, const double* const cos_values, const long num_riemann_terms, double* const fourier_coeffs_sin, double* const fourier_coeffs_cos, int start_inc, int end_exc) {
+	for(int i = start_inc; i < end_exc; i++) {
+		numeric_integral(riemann_values, sin_values, cos_values, &(fourier_coeffs_sin[i]), &(fourier_coeffs_cos[i]), num_riemann_terms, i);
+	}
 }
 
 int main(int argc, char** argv) {
@@ -129,19 +136,43 @@ int main(int argc, char** argv) {
 	std::cout << std::setprecision(std::numeric_limits<long double>::digits10 + 1);
 	std::cout << offset;
 
+	double* fourier_coeffs_cos = (double*)malloc(sizeof(double) * ((num_fourier_terms+1)/2));
+	if(fourier_coeffs_cos == nullptr) {
+		std::cerr << "Unable to allocate #4." << std::endl;
+		return 6;
+	}
+	double* fourier_coeffs_sin = (double*)malloc(sizeof(double) * ((num_fourier_terms+1)/2));
+	if(fourier_coeffs_sin == nullptr) {
+		std::cerr << "Unable to allocate #5." << std::endl;
+		return 7;
+	}
+
+	unsigned int max_threads = std::thread::hardware_concurrency();
+	std::thread threads[max_threads];
+
+	int num_per_thread = ((num_fourier_terms+1)/2)/max_threads;
+	for(int i = 0; i < max_threads; i++) {
+		int num_this_thread = (i == max_threads - 1) ? ((num_fourier_terms+1)/2) - (max_threads - 1) * num_per_thread : num_per_thread;
+		int tt_lower_bound = num_per_thread * i;
+		int tt_upper_bound = tt_lower_bound + num_this_thread;
+		threads[i] = std::thread(integrate_multithreaded, (const double* const)riemann_values, (const double* const)sin_values, (const double* const)cos_values, num_riemann_terms, fourier_coeffs_sin, fourier_coeffs_cos, tt_lower_bound, tt_upper_bound);
+	}
+	for(int i = 0; i < max_threads; i++) {
+		threads[i].join();
+	}
+
 	for(int i = 1; i <= (num_fourier_terms+1)/2; i++) {
-		double sin_coeff;
-		double cos_coeff;
-		numeric_integral(riemann_values, sin_values, cos_values, &sin_coeff, &cos_coeff, num_riemann_terms, i);
 		double x_coeff = i * pi / bound;
-		std::cout << " + (" << (cos_coeff/bound) << ")*cos(x*" << x_coeff << ")";
+		std::cout << " + (" << (fourier_coeffs_cos[i-1]/bound) << ")*cos(x*" << x_coeff << ")";
 		if(!(i == (num_fourier_terms+1)/2 && (num_fourier_terms & 1) == 1)) {
-			std::cout << " + (" << (sin_coeff/bound) << ")*sin(x*" << x_coeff << ")";
+			std::cout << " + (" << (fourier_coeffs_sin[i-1]/bound) << ")*sin(x*" << x_coeff << ")";
 		}
 	}
 	std::cout << std::endl;
 	free(riemann_values);
 	free(sin_values);
 	free(cos_values);
+	free(fourier_coeffs_cos);
+	free(fourier_coeffs_sin);
 	return 0;
 }
