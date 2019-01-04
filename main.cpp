@@ -45,7 +45,7 @@ void numeric_integral(const double* const riemann_values, const double* const si
 
 void integrate_multithreaded(const double* const riemann_values, const double* const sin_values, const double* const cos_values, const long num_riemann_terms, double* const fourier_coeffs_sin, double* const fourier_coeffs_cos, int start_inc, int end_exc) {
 	for(int i = start_inc; i < end_exc; i++) {
-		numeric_integral(riemann_values, sin_values, cos_values, &(fourier_coeffs_sin[i]), &(fourier_coeffs_cos[i]), num_riemann_terms, i);
+		numeric_integral(riemann_values, sin_values, cos_values, &(fourier_coeffs_sin[i-1]), &(fourier_coeffs_cos[i-1]), num_riemann_terms, i);
 	}
 }
 
@@ -152,9 +152,8 @@ int main(int argc, char** argv) {
 
 	int num_per_thread = ((num_fourier_terms+1)/2)/max_threads;
 	for(int i = 0; i < max_threads; i++) {
-		int num_this_thread = (i == max_threads - 1) ? ((num_fourier_terms+1)/2) - (max_threads - 1) * num_per_thread : num_per_thread;
-		int tt_lower_bound = num_per_thread * i;
-		int tt_upper_bound = tt_lower_bound + num_this_thread;
+		int tt_lower_bound = num_per_thread * i + 1;
+		int tt_upper_bound = (i == max_threads - 1) ? ((num_fourier_terms+1)/2)+1 : tt_lower_bound + num_per_thread;
 		threads[i] = std::thread(integrate_multithreaded, (const double* const)riemann_values, (const double* const)sin_values, (const double* const)cos_values, num_riemann_terms, fourier_coeffs_sin, fourier_coeffs_cos, tt_lower_bound, tt_upper_bound);
 	}
 	for(int i = 0; i < max_threads; i++) {
